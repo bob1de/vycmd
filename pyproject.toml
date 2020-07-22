@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "vyopd"
+version = "0.1.0"
+description = "VyOS operational mode command daemon"
+authors = ["Robert Schindler <r.schindler@efficiosoft.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+black = "^19.10b0"
+
+[tool.black]
+line-length = 88
+target-version = ["py37"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
