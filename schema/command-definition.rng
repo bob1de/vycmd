@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <!--
+       command-definition.rnc: VyCmd reference tree XML grammar
+    
+       Copyright (C) 2020 VyOS maintainers and contributors <maintainers@vyos.net>
+    
+       This library is free software; you can redistribute it and/or
+       modify it under the terms of the GNU Lesser General Public
+       License as published by the Free Software Foundation; either
+       version 2.1 of the License, or (at your option) any later version.
+    
+       This library is distributed in the hope that it will be useful,
+       but WITHOUT ANY WARRANTY; without even the implied warranty of
+       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+       Lesser General Public License for more details.
+    
+       You should have received a copy of the GNU Lesser General Public
+       License along with this library; if not, write to the Free Software
+       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+       USA
+  -->
+  <!--
+    The language of this file is compact form RELAX-NG
+    http://relaxng.org/compact-tutorial-20030326.htm
+    (unless converted to XML, then just RELAX-NG :)
+  -->
+  <!--
+    It starts with the commandDefinition tag that may contain nodes and, optionally,
+    an input node
+  -->
+  <start>
+    <element name="commandDefinition">
+      <interleave>
+        <zeroOrMore>
+          <ref name="node"/>
+        </zeroOrMore>
+        <optional>
+          <ref name="inputNode"/>
+        </optional>
+      </interleave>
+    </element>
+  </start>
+  <define name="node">
+    <element name="node">
+      <!-- Regular nodes must have a fixed name -->
+      <attribute name="name"/>
+      <ref name="commonNodeProperties"/>
+    </element>
+  </define>
+  <!--
+    Input nodes have no predefined names and serve as placeholder, like network
+    interface names or usernames.
+  -->
+  <define name="inputNode">
+    <element name="inputNode">
+      <ref name="commonNodeProperties"/>
+      <zeroOrMore>
+        <ref name="completionHelp"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <!-- These are properties of both node and inputNode tags -->
+  <define name="commonNodeProperties">
+    <a:documentation>Node properties</a:documentation>
+    <interleave>
+      <optional>
+        <!-- The help tag may provide a short description of the purpose of the node -->
+        <group>
+          <element name="help">
+            <text/>
+          </element>
+        </group>
+      </optional>
+      <optional>
+        <ref name="call"/>
+      </optional>
+      <optional>
+        <ref name="children"/>
+      </optional>
+    </interleave>
+  </define>
+  <!-- Defines the action to run when this node gets called -->
+  <define name="call">
+    <element name="call">
+      <choice>
+        <!--
+          Register a Python handler class by its full import path, like so:
+          'package.subpackage.module:class'
+        -->
+        <element name="python">
+          <text/>
+        </element>
+        <!-- Or alternatively, define a shell-command to run -->
+        <element name="shell">
+          <optional>
+            <!--
+              When this is enabled, the command is assumed to require user input
+              on stdin and thus can't run headless. This must also be set for commands
+              which generate non-UTF-8 output.
+            -->
+            <group>
+              <attribute name="interactive">
+                <data type="boolean"/>
+              </attribute>
+            </group>
+          </optional>
+          <text/>
+        </element>
+      </choice>
+    </element>
+  </define>
+  <!-- Each node may have multiple nodes and, optionally, a single input node as children -->
+  <define name="children">
+    <element name="children">
+      <interleave>
+        <zeroOrMore>
+          <ref name="node"/>
+        </zeroOrMore>
+        <optional>
+          <ref name="inputNode"/>
+        </optional>
+      </interleave>
+    </element>
+  </define>
+  <!--
+    completionHelp tags contain information about allowed values of an input node that
+    is used for generating tab completion in CLI and drop-down lists in GUI frontends
+  -->
+  <define name="completionHelp">
+    <a:documentation>Input node extra properties</a:documentation>
+    <element name="completionHelp">
+      <interleave>
+        <zeroOrMore>
+          <!-- Offer the nodes/values found under this space-separated config path as hints -->
+          <group>
+            <element name="config">
+              <text/>
+            </element>
+          </group>
+        </zeroOrMore>
+        <zeroOrMore>
+          <!-- Add a static text to the list of completion hints -->
+          <group>
+            <element name="item">
+              <text/>
+            </element>
+          </group>
+        </zeroOrMore>
+        <zeroOrMore>
+          <!--
+            Offer the list returned by this Python callable as completion hints;
+            the callable has to be specified in dotted full import path syntax:
+            - 'package.module.list_things'
+          -->
+          <group>
+            <element name="python">
+              <text/>
+            </element>
+          </group>
+        </zeroOrMore>
+        <zeroOrMore>
+          <!-- Offer the lines this shell command outputs as completion hints -->
+          <group>
+            <element name="shell">
+              <text/>
+            </element>
+          </group>
+        </zeroOrMore>
+      </interleave>
+    </element>
+  </define>
+</grammar>
